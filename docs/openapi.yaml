@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: API de Pedidos
+  version: 1.0.0
+  description: |
+    API REST simples para gerenciamento de pedidos de comércio eletrônico (CP5 - Arquitetura Orientada a Serviço).
+    Permite criar um pedido e consultar um pedido pelo identificador. Os dados ficam em memória.
+
+    Toda resposta traz o header `X-Request-Id`, que também aparece nos logs estruturados.
+    O cliente pode enviar o próprio `X-Request-Id`; caso contrário, a API gera um.
+servers:
+  - url: http://localhost:5000
+    description: Execução local (dotnet run)
+tags:
+  - name: Pedidos
+paths:
+  /pedidos:
+    post:
+      tags: [Pedidos]
+      operationId: criarPedido
+      summary: Cria um pedido
+      description: Cria um pedido com status inicial `CRIADO`. O id e a data de criação são gerados pelo servidor.
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPedidoRequest'
+            example:
+              cliente: Maria Silva
+              descricao: 1x Notebook Dell Inspiron 15
+              valor: 4599.90
+      responses:
+        '201':
+          description: Pedido criado.
+          headers:
+            Location:
+              description: Caminho do pedido criado.
+              schema:
+                type: string
+                example: /pedidos/904e15a1-9570-4f5b-a7b4-e360b3f8cab8
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+              example:
+                id: 904e15a1-9570-4f5b-a7b4-e360b3f8cab8
+                cliente: Maria Silva
+                descricao: 1x Notebook Dell Inspiron 15
+                valor: 4599.90
+                status: CRIADO
+                criadoEm: '2026-10-22T00:33:35.6762143+00:00'
+        '400':
+          description: Dados inválidos (campos obrigatórios ausentes, valor menor ou igual a zero) ou JSON malformado.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: https://tools.ietf.org/html/rfc9110#section-15.5.1
+                title: Dados do pedido inválidos.
+                status: 400
+                errors:
+                  cliente: [O cliente é obrigatório.]
+                  descricao: [A descrição é obrigatória.]
+                  valor: [O valor deve ser maior que zero.]
+                traceId: 00-785462c600d7eeead15ceec00bb968a7-c1742f36c0825cf7-00
+                requestId: req-invalido-004
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+  /pedidos/{id}:
+    get:
+      tags: [Pedidos]
+      operationId: obterPedidoPorId
+      summary: Consulta um pedido pelo identificador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador do pedido (UUID).
+          schema:
+            type: string
+            format: uuid
+          example: 904e15a1-9570-4f5b-a7b4-e360b3f8cab8
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Pedido encontrado.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+              example:
+                id: 904e15a1-9570-4f5b-a7b4-e360b3f8cab8
+                cliente: Maria Silva
+                descricao: 1x Notebook Dell Inspiron 15
+                valor: 4599.90
+                status: CRIADO
+                criadoEm: '2026-10-22T00:33:35.6762143+00:00'
+        '404':
+          description: Pedido inexistente (ou id fora do formato UUID).
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+                title: Pedido não encontrado.
+                status: 404
+                detail: Não existe pedido com o id 3fa85f64-5717-4562-b3fc-2c963f66afa6.
+                traceId: 00-0adbaebc3735bcf90389529b2c255ddc-162c16118ab350f7-00
+                requestId: req-inexistente-003
+        '500':
+          $ref: '#/components/responses/ErroInterno'
+components:
+  parameters:
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: Identificador de correlação opcional (até 64 caracteres; letras, números, ".", "_" e "-").
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '^[A-Za-z0-9._-]{1,64}$'
+      example: req-criar-001
+  headers:
+    XRequestId:
+      description: Identificador da requisição, o mesmo registrado nos logs.
+      schema:
+        type: string
+      example: req-criar-001
+  responses:
+    ErroInterno:
+      description: Erro inesperado no servidor.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://tools.ietf.org/html/rfc9110#section-15.6.1
+            title: An error occurred while processing your request.
+            status: 500
+            traceId: 00-0ef6b5046ee916c3abd21a8500a89d72-a894fdd92d044df6-00
+            requestId: 9be4455e-ed3b-4dc2-ae75-267b625e905c
+  schemas:
+    CriarPedidoRequest:
+      type: object
+      required: [cliente, descricao, valor]
+      properties:
+        cliente:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nome ou identificação do cliente.
+        descricao:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Descrição do pedido.
+        valor:
+          type: number
+          format: decimal
+          exclusiveMinimum: true
+          minimum: 0
+          description: Valor do pedido (maior que zero).
+    Pedido:
+      type: object
+      required: [id, cliente, descricao, valor, status, criadoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        cliente:
+          type: string
+        descricao:
+          type: string
+        valor:
+          type: number
+          format: decimal
+        status:
+          $ref: '#/components/schemas/StatusPedido'
+        criadoEm:
+          type: string
+          format: date-time
+          description: Data e hora de criação (UTC).
+    StatusPedido:
+      type: string
+      enum: [CRIADO]
+      description: Status do pedido. Todo pedido é criado com status CRIADO.
+    ProblemDetails:
+      type: object
+      description: Formato padrão de erro (RFC 9457).
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        traceId:
+          type: string
+        requestId:
+          type: string
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              description: Mensagens de erro por campo.
+              additionalProperties:
+                type: array
+                items:
+                  type: string

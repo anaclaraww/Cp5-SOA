@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Pedidos.Api</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Nenhum pacote externo: API, logs JSON e ProblemDetails usam apenas o ASP.NET Core 9. -->
+
+</Project>

@@ -1,0 +1,39 @@
+newman
+
+CP5 SOA - API de Pedidos
+
+→ Criar pedido
+  POST http://localhost:5000/pedidos [201 Created, 455B, 160ms]
+  ✓  Retorna 201 Created
+  ✓  Pedido nasce com status CRIADO
+  ✓  Header Location aponta para o pedido
+
+→ Consultar pedido existente
+  GET http://localhost:5000/pedidos/477d7b34-8115-45f8-a7c4-3e5b31a0491b [200 OK, 393B, 7ms]
+  ✓  Retorna 200 OK
+  ✓  Devolve o pedido criado
+
+→ Consultar pedido inexistente
+  GET http://localhost:5000/pedidos/3fa85f64-5717-4562-b3fc-2c963f66afa6 [404 Not Found, 504B, 22ms]
+  ✓  Retorna 404 Not Found
+  ✓  Erro no formato problem+json
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                 3 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                 3 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 0 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                 7 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 259ms                                      │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 690B (approx)                             │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 63ms [min: 7ms, max: 160ms, s.d.: 68ms] │
+└────────────────────────────────────────────────────────────────┘

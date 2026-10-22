@@ -1,0 +1,78 @@
+{
+  "info": {
+    "name": "CP5 SOA - API de Pedidos",
+    "description": "Testes automatizados da API de Pedidos (executáveis no Postman Runner ou via Newman).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "pedidoId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Criar pedido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Retorna 201 Created', () => pm.response.to.have.status(201));",
+              "const pedido = pm.response.json();",
+              "pm.test('Pedido nasce com status CRIADO', () => pm.expect(pedido.status).to.eql('CRIADO'));",
+              "pm.test('Header Location aponta para o pedido', () => pm.expect(pm.response.headers.get('Location')).to.eql('/pedidos/' + pedido.id));",
+              "pm.collectionVariables.set('pedidoId', pedido.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Maria Silva\",\n  \"descricao\": \"1x Notebook Dell Inspiron 15\",\n  \"valor\": 4599.90\n}"
+        },
+        "url": "{{baseUrl}}/pedidos"
+      }
+    },
+    {
+      "name": "Consultar pedido existente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Retorna 200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Devolve o pedido criado', () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('pedidoId')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos/{{pedidoId}}"
+      }
+    },
+    {
+      "name": "Consultar pedido inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Retorna 404 Not Found', () => pm.response.to.have.status(404));",
+              "pm.test('Erro no formato problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      }
+    }
+  ]
+}

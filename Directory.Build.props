@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Roda no runtime .NET 9; se a máquina só tiver um runtime mais novo (ex.: .NET 10), usa ele. -->
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+</Project>
